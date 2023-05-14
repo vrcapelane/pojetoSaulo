@@ -1,0 +1,437 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+
+<head>
+    <!-- https://www.toptal.com/developers/keycode -->
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Prof. Saulo Santos - Computação Gráfica</title>
+
+
+    <script type="module" src="https://unpkg.com/ionicons@5.5.2/dist/ionicons/ionicons.esm.js"></script>
+    <script nomodule src="https://unpkg.com/ionicons@5.5.2/dist/ionicons/ionicons.js"></script>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        html,
+        body {
+            color: white;
+            background-color: #000;
+            height: -webkit-calc(100% - 50px);
+            /* para Chrome */
+            height: -moz-calc(100% - 50px);
+            /* para Firefox */
+            height: calc(100% - 50px);
+            /* para suporte nativo */
+            margin: auto;
+            position: fixed;
+            top: 0;
+            bottom: 0;
+            left: 0;
+            right: 0;
+
+        }
+
+        .container {
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            align-items: center;
+            background-color: #4b4b4b;
+            border: 1px solid #fff;
+            margin: 10px;
+            height: 100%;
+            border-radius: 10px;
+            min-height: 500px;
+        }
+
+
+        .header {
+            border-bottom: 1px solid #fff;
+            height: 25px;
+            width: 100%;
+        }
+
+        .main {
+            display: flex;
+            flex-direction: column;
+            width: 50%;
+            text-align: center;
+            min-height: 200px;
+            background-image: url(img/fundo.jpg);
+            width: 100%;
+            height: 900px;
+            background-repeat: no-repeat;
+            background-size: cover;
+        }
+
+        .footer {
+            width: 100%;
+            border-top: 1px solid #fff;
+            height: 25px;
+            text-align: center;
+            display: flex;
+        }
+
+        .message {
+            padding-right: 10px;
+        }
+
+        .links {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            height: 25px;
+        }
+
+        .links a {
+            height: 20px;
+            color: white;
+            padding: 0 2px;
+        }
+
+        img {
+            position: absolute;
+        }
+
+        #mensagem {
+            display: none;
+        }
+    </style>
+
+</head>
+
+<body>
+    <div class="container" id="gameContainer">
+        <div class="header">
+            <div class="links">
+                <a href="#"><ion-icon name="logo-facebook"> </ion-icon></a>
+                <a href="#"><ion-icon name="logo-twitter"> </ion-icon></a>
+                <a href="#"><ion-icon name="logo-instagram"></ion-icon></a>
+                <a href="#"><ion-icon name="logo-linkedin"> </ion-icon></a>
+                <a href="#"><ion-icon name="logo-youtube"> </ion-icon></a>
+                <p>profsaulosantos</p>
+            </div>
+        </div>
+        <div class="main">
+            <img id="nave" src="img/space_ship.png">
+        </div>
+        <div class="footer">
+            <div id="message-footer"></div>
+            <div class="message" id="meteoros">Vidas:100</div>
+            <div class="message" id="colisoes">Colisões:0</div>
+            <div class="message" id="pontos">Pontos:0</div>
+        </div>
+    </div>
+
+    <div id="vitoriaContainer" style=" width: 100vw; 
+                 height: 100vh; 
+                 display: none; 
+                 background-image: url('img/win.webp'); 
+                 background-size: cover; 
+                 background-position: center; 
+                 background-repeat: no-repeat;">
+        <div style="text-align: center;
+                    align-items: center;
+                    padding: 50vh;">
+            <h1 style="font-weight:bolder;
+                       font-size: 5rem;  
+                       color: rgb(33, 196, 0);">VOCE GANHOU!</h1>
+            <button id="NextGameStart">Proxima Fase</button>
+        </div>
+        <audio id="audio-vitoria">
+            <source src="audio/menu.mp3" type="audio/mpeg">
+        </audio>
+    </div>
+
+    <div id="gameOverContainer" style=" width: 100vw; 
+                 height: 100vh; 
+                 display: none; 
+                 background-image: url('img/game_over.jpeg'); 
+                 background-size: cover; 
+                 background-position: center; 
+                 background-repeat: no-repeat;">
+        <div style="text-align: center;
+                    align-items: center;
+                    padding: 50vh;">
+            <h1 style="font-weight:bolder;
+                       font-size: 5rem;  
+                       color: rgb(33, 196, 0);">VOCE PERDEU!</h1>
+            <button id="restartButton">Reiniciar</button>
+        </div>
+        <audio id="audio-game-over">
+            <source src="audio/game-over.mp3" type="audio/mpeg">
+        </audio>
+        <audio id="audio-game-start">
+            <source src="audio/game-start.mp3" type="audio/mpeg">
+        </audio>
+    </div>
+
+    <audio id="audio-fundo">
+        <source src="audio/arcade.mp3" type="audio/mpeg">
+    </audio>
+    <audio id="audio-atirar">
+        <source src="audio/tiro.mp3" type="audio/mpeg">
+    </audio>
+    <audio id="audio-explosao">
+        <source src="audio/explosão.mp3" type="audio/mpeg">
+    </audio>
+
+    <script>
+
+        // Conexão com as tags HTML
+        const nave = document.querySelector("#nave");
+        const divMain = document.querySelector(".main");
+        const idMensagem = document.querySelector("#message-footer");
+        const idColisao = document.querySelector("#colisoes");
+        const idMeteoro = document.querySelector("#meteoros");
+        const idPonto = document.querySelector("#pontos");
+
+
+        // Reservado para uso futuro
+        // let STRING_ALTURA_FRAME = window.getComputedStyle(divMain).height;
+        // idMensagem.innerHTML = STRING_ALTURA_FRAME;
+
+        const altura_meteoro = 50; // evita colisão de meteoros 
+        const margem = 20; // margem usada no css
+        const limite_X_nave = window.innerWidth - nave.offsetWidth - margem;
+        const limite_Y_nave = window.innerHeight - nave.offsetHeight - 105;
+
+        // Array de meteoros
+        let meteoros = [];
+        let misseis = [];
+        let qtdColisoes = 0;
+        let qtdVidas = 100;
+        let qtdPontos = 0;
+
+        function exibirJogo() {
+            const gameContainer = document.getElementById('gameContainer');
+            gameContainer.style.display = 'block';
+            var StartJogo = document.getElementById('audio-fundo');
+            StartJogo.play();
+        }
+
+        function exibirVitoria() {
+            const gameContainer = document.getElementById('gameContainer');
+            const vitoriaContainer = document.getElementById('vitoriaContainer');
+            const audioVitoria = document.getElementById('audio-vitoria');
+            audioVitoria.play();
+            gameContainer.style.display = 'none';
+            vitoriaContainer.style.display = 'block';
+        }
+
+        function exibirGameOver() {
+            const gameContainer = document.getElementById('gameContainer');
+            const gameOverContainer = document.getElementById('gameOverContainer');
+            const audioGameOver = document.getElementById('audio-game-over');
+            audioGameOver.play(); // Para reproduzir o áudio de game over
+            gameContainer.style.display = 'none';
+            gameOverContainer.style.display = 'block';
+        }
+
+        function ocultarGameOver() {
+            const gameOverContainer = document.getElementById('gameOverContainer');
+            gameOverContainer.style.display = 'none';
+        }
+
+        function proximaFase() {
+            var NextGameStart = document.getElementById('audio-game-start');
+            NextGameStart.play();
+            window.location.reload();
+        }
+
+        function reiniciarJogo() {
+            var gameStart = document.getElementById('audio-game-start');
+            gameStart.play();
+            ocultarGameOver();
+            exibirJogo();
+            window.location.reload();
+        }
+
+        document.getElementById('NextGameStart').addEventListener('click', proximaFase);
+        document.getElementById('restartButton').addEventListener('click', reiniciarJogo);
+
+        // Verifica se pode criar um meteoro na posicao enviada como parametro.
+        // Se a posição Y de criação do meteoro for proibida, retorna false.
+        function verificaExistenciaMeteoroPosicaoY(posicaoYMeteoro) {
+            for (i = 0; i < meteoros.length; i++)
+                if ((meteoros[i].posicaoYMeteoro - altura_meteoro <= posicaoYMeteoro) &&
+                    (meteoros[i].posicaoYMeteoro + altura_meteoro >= posicaoYMeteoro))
+                    return false;
+            return true;
+        }
+
+        class Misseis {
+            constructor(x, y) {
+                // Cria uma tag <img> e a insere dentro da <div class="main"> 
+                this.missel = document.createElement('img');
+                this.missel.src = 'img/tiro.jpg';
+                document.querySelector('.main').appendChild(this.missel);
+
+                // Define posição X e Y e velocidade do meteoro
+                this.posicaoXMissel = x + 86;
+                this.posicaoYMissel = (y + 44 / 2);
+                this.velocidade = 6;
+
+                // Audio tiro/missel
+                const audioAtirar = document.getElementById('audio-atirar');
+                audioAtirar.play();
+
+                // Atualiza posição do meteoro
+                this.missel.style.transform = `translate(${this.posicaoXMissel}px, ${this.posicaoYMissel}px)`;
+
+            }
+
+            animar = () => {
+                this.posicaoXMissel += this.velocidade;
+                this.missel.style.transform = `translate(${this.posicaoXMissel}px, ${this.posicaoYMissel}px)`;
+                if (this.posicaoXMissel > limite_X_nave + 200) return true;
+            }
+
+        }
+
+        class Meteoros {
+            constructor(posicaoYMeteoro) {
+                // Cria uma tag <img> e a insere dentro da <div class="main"> 
+                this.meteoro = document.createElement('img');
+                this.meteoro.src = 'img/meteoro2.png';
+                document.querySelector('.main').appendChild(this.meteoro);
+                // Define posição X e Y e velocidade do meteoro
+                this.posicaoXMeteoro = window.innerWidth;
+                this.posicaoYMeteoro = posicaoYMeteoro;
+                this.velocidade = Math.random() * 10 + 15;
+                // Atualiza posicição do meteoro
+                this.meteoro.style.transform = `translate(${this.posicaoXMeteoro}px, ${this.posicaoYMeteoro}px)`;
+            }
+
+            animar = () => {
+                // console.log(i);
+                // Altera posição X do meteoro
+                this.posicaoXMeteoro -= this.velocidade;
+                // Atualiza posicição do meteoro
+                this.meteoro.style.transform = `translate(${this.posicaoXMeteoro}px, ${this.posicaoYMeteoro}px)`;
+                if (this.posicaoXMeteoro < -150) return true;
+
+            }
+
+            isCollision(coord_X_Obj1, coord_Y_Obj1, width_Obj1, height_Obj1, coord_X_Obj2, coord_Y_Obj2, width_Obj2, height_Obj2) {
+
+                const distance_X = Math.abs(coord_X_Obj1 - coord_X_Obj2);
+                const distance_Y = Math.abs(coord_Y_Obj1 - coord_Y_Obj2);
+
+                const L = coord_X_Obj1 < coord_X_Obj2 ? width_Obj1 : width_Obj2;
+                const A = coord_Y_Obj1 < coord_Y_Obj2 ? width_Obj1 : height_Obj2;
+
+                if (!(distance_X >= L || distance_Y >= A)) {
+                    this.meteoro.remove(); // fia da mãe. Apaga o meteoro do frame.
+                    return true;
+                }
+            }
+
+        }
+
+        // Deslocamento da nave
+        let dx = 0;
+        let dy = 0;
+
+        // Posicao inicial da nave no canto superior esquerdo
+        let posicaoXNave = 0;
+        let posicaoYNave = 0;
+
+        // Cria os addEventListeners que vao verificar quando o keydown e keyup forem acionados
+        document.addEventListener("keydown", teclaDown = (event) => {
+            let tecla = event.key;
+            if (tecla === "ArrowLeft") dx = -7;
+            else if (tecla === "ArrowUp") dy = -7;
+            else if (tecla === "ArrowRight") dx = 7;
+            else if (tecla === "ArrowDown") dy = 7;
+            else if (tecla === " ") {
+                if (misseis.length < 5) { //Limita o numeros de misseis lançados.
+                    const missel = new Misseis(posicaoXNave, posicaoYNave);
+                    misseis.push(missel);
+                }
+            }
+        });
+
+        document.addEventListener("keyup", teclaUp = (event) => {
+            let tecla = event.key;
+            if (tecla === "ArrowLeft") dx = 0;
+            else if (tecla === "ArrowUp") dy = 0;
+            else if (tecla === "ArrowRight") dx = 0;
+            else if (tecla === "ArrowDown") dy = 0;
+        });
+
+        let i = -1;
+
+        animacao = () => {
+
+            // Gera uma posição Y aleatória para posicionar o meteoro
+            let posicaoYMeteoro = Math.round(Math.random() * (window.innerHeight - altura_meteoro - 100));
+
+            // Se a posição Y do meteoro é válida, instancia-se o novo meteoro nessa posição
+            // O limite de criacao de novos meteoros limita-se a altura do frame. Não sao criados meteoros sobrepostos.
+            if (verificaExistenciaMeteoroPosicaoY(posicaoYMeteoro)) meteoros.push(new Meteoros(posicaoYMeteoro));
+
+            // Trata das colisões
+            for (let i = 0; i < meteoros.length; i++) {
+
+                if (meteoros[i].animar()) {
+                    meteoros.splice(i, 1); // elimina o meteoro do array
+                    idMeteoro.innerHTML = ` Vidas ${qtdVidas--} `;
+
+                    if (qtdVidas === 0) {
+                        exibirGameOver();
+                        return;
+                    }
+
+                } else if (meteoros[i].isCollision(meteoros[i].posicaoXMeteoro, meteoros[i].posicaoYMeteoro, 50, 40, posicaoXNave, posicaoYNave, 86, 38)) {
+                    meteoros.splice(i, 1);
+                    idColisao.innerHTML = ` Colisões ${qtdColisoes++} `;
+
+                    const audioExplosao = document.getElementById('audio-explosao');
+                    audioExplosao.play();
+
+                    if (qtdColisoes === 10) {
+                        exibirGameOver();
+                        return;
+                    }
+
+                } else for (let j = 0; j < misseis.length; j++)
+                    if (misseis[j].animar()) misseis.splice(j, 1);
+                    else if (meteoros[i].isCollision(meteoros[i].posicaoXMeteoro, meteoros[i].posicaoYMeteoro, 50, 40, misseis[j].posicaoXMissel, misseis[j].posicaoYMissel, 5, 5))
+                        idPonto.innerHTML = ` Pontos ${qtdPontos++}`;
+
+                if (qtdPontos === 10) {
+                    exibirVitoria();
+                    return;
+                }
+            }
+
+            //Atualiza as coordenadas X e Y
+            posicaoXNave += dx;
+            posicaoYNave += dy;
+
+            //Verifica os limites horizontais da nave
+            if (posicaoXNave < 0) posicaoXNave = 0;
+            else if (posicaoXNave > limite_X_nave) posicaoXNave = limite_X_nave;
+
+            //Verifica os limites verticais da nave
+            if (posicaoYNave < margem) posicaoYNave = margem;
+            else if (posicaoYNave > limite_Y_nave) posicaoYNave = limite_Y_nave;
+
+            //Atualiza a posição da nave com as novas coordenadas
+            nave.style.transform = `translate(${posicaoXNave}px, ${posicaoYNave}px)`;
+
+            // Fim de jogo
+            if (qtdVidas >= 0) requestAnimationFrame(animacao);
+
+        };
+
+
+        animacao();
+
+    </script>
+</body>
+
+</html>
