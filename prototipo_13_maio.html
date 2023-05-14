@@ -119,7 +119,7 @@
         </div>
         <div class="footer">
             <div id="message-footer"></div>
-            <div class="message" id="meteoros">Vidas:100</div>
+            <div class="message" id="meteoros">Vidas:1000</div>
             <div class="message" id="colisoes">Colisões:0</div>
             <div class="message" id="pontos">Pontos:0</div>
         </div>
@@ -197,12 +197,13 @@
         const margem = 20; // margem usada no css
         const limite_X_nave = window.innerWidth - nave.offsetWidth - margem;
         const limite_Y_nave = window.innerHeight - nave.offsetHeight - 105;
+        const altura_upgrade = 50; // mesma altura dos meteoros para evitar problemas na hora de aparecer 
 
         // Array de meteoros
         let meteoros = [];
         let misseis = [];
         let qtdColisoes = 0;
-        let qtdVidas = 100;
+        let qtdVidas = 1000;
         let qtdPontos = 0;
 
         function exibirJogo() {
@@ -331,6 +332,47 @@
 
         }
 
+        //Upgrade
+        class Upgrade {
+            constructor(posicaoYUpgrade, srcImagemUpgrade) {
+                // Cria uma tag <img> e a insere dentro da <div class="main"> 
+                this.upgrade = document.createElement('img');
+                this.upgrade.src = srcImagemUpgrade;
+                document.querySelector('.main').appendChild(this.upgrade);
+                // Define posição X e Y e velocidade do meteoro
+                this.posicaoXUpgrade = window.innerWidth;
+                this.posicaoYUpgrade = posicaoYUpgrade;
+                this.velocidade = Math.random() * 10 + 5;
+                // Atualiza posicição do upgrade
+                this.upgrade.style.transform = `translate(${this.posicaoXUpgrade}px, ${this.posicaoYUpgrade}px)`;
+            }
+
+            animar = () => {
+                // console.log(i);
+                // Altera posição X do upgrade
+                this.posicaoXUpgrade -= this.velocidade;
+                // Atualiza posicição do upgrade
+                this.upgrade.style.transform = `translate(${this.posicaoXUpgrade}px, ${this.posicaoYUpgrade}px)`;
+                if (this.posicaoXUpgrade < -150) return true;
+
+            }
+
+            isCollision(coord_X_Obj1, coord_Y_Obj1, width_Obj1, height_Obj1, coord_X_Obj2, coord_Y_Obj2, width_Obj2, height_Obj2) {
+
+                const distance_X = Math.abs(coord_X_Obj1 - coord_X_Obj2);
+                const distance_Y = Math.abs(coord_Y_Obj1 - coord_Y_Obj2);
+
+                const L = coord_X_Obj1 < coord_X_Obj2 ? width_Obj1 : width_Obj2;
+                const A = coord_Y_Obj1 < coord_Y_Obj2 ? width_Obj1 : height_Obj2;
+
+                if (!(distance_X >= L || distance_Y >= A)) {
+                    this.upgrade.remove(); // fia da mãe. Apaga o upgrade do frame.
+                    return true;
+                }
+            }
+
+        }
+
         // Deslocamento da nave
         let dx = 0;
         let dy = 0;
@@ -364,6 +406,9 @@
 
         let i = -1;
 
+        //Limitar meteoros
+        let qtdMeteoros = 0;
+
         animacao = () => {
 
             // Gera uma posição Y aleatória para posicionar o meteoro
@@ -371,7 +416,10 @@
 
             // Se a posição Y do meteoro é válida, instancia-se o novo meteoro nessa posição
             // O limite de criacao de novos meteoros limita-se a altura do frame. Não sao criados meteoros sobrepostos.
-            if (verificaExistenciaMeteoroPosicaoY(posicaoYMeteoro)) meteoros.push(new Meteoros(posicaoYMeteoro));
+            if ((qtdMeteoros < 100) && (verificaExistenciaMeteoroPosicaoY(posicaoYMeteoro))) {
+                meteoros.push(new Meteoros(posicaoYMeteoro));
+                qtdMeteoros++;
+            }
 
             // Trata das colisões
             for (let i = 0; i < meteoros.length; i++) {
@@ -392,7 +440,7 @@
                     const audioExplosao = document.getElementById('audio-explosao');
                     audioExplosao.play();
 
-                    if (qtdColisoes === 10) {
+                    if (qtdColisoes === 25) {
                         exibirGameOver();
                         return;
                     }
@@ -402,7 +450,7 @@
                     else if (meteoros[i].isCollision(meteoros[i].posicaoXMeteoro, meteoros[i].posicaoYMeteoro, 50, 40, misseis[j].posicaoXMissel, misseis[j].posicaoYMissel, 5, 5))
                         idPonto.innerHTML = ` Pontos ${qtdPontos++}`;
 
-                if (qtdPontos === 10) {
+                if (qtdPontos === 100) {
                     exibirVitoria();
                     return;
                 }
