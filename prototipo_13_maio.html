@@ -119,7 +119,9 @@
         </div>
         <div class="footer">
             <div id="message-footer"></div>
-            <div class="message" id="meteoros">Vidas:1000</div>
+            <div class="message" id="meteoros">
+                <div id="lifebar" class="lifebar" style="width: 100%; height: 25px; background-color: green;">Vidas:1000</div>
+            </div>
             <div class="message" id="colisoes">Colisões:0</div>
             <div class="message" id="pontos">Pontos:0</div>
         </div>
@@ -187,7 +189,7 @@
         const idColisao = document.querySelector("#colisoes");
         const idMeteoro = document.querySelector("#meteoros");
         const idPonto = document.querySelector("#pontos");
-
+        const idLifeBar = document.querySelector("#lifebar");
 
         // Reservado para uso futuro
         // let STRING_ALTURA_FRAME = window.getComputedStyle(divMain).height;
@@ -205,6 +207,12 @@
         let qtdColisoes = 0;
         let qtdVidas = 1000;
         let qtdPontos = 0;
+
+        function lifeBar(qtdVidas) {
+            console.log(idLifeBar.style.width);
+            // Atualiza a largura da barra de vida
+            idLifeBar.style.width = parseInt(qtdVidas / 10) + "%";
+        }
 
         function exibirJogo() {
             const gameContainer = document.getElementById('gameContainer');
@@ -421,6 +429,7 @@
                 qtdMeteoros++;
             }
 
+            lifeBar(qtdVidas);
             // Trata das colisões
             for (let i = 0; i < meteoros.length; i++) {
 
